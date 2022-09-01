@@ -25,17 +25,13 @@ headers = {"Content-Type": "application/json"}
 r = requests.get('https://zenodo.org/api/deposit/depositions/%s' % (opt.deposit),
                    params=params,
                    json={},
-                   # Headers are not necessary here since "requests" automatically
-                   # adds "Content-Type: application/json", because we're using
-                   # the "json=" keyword argument
-                   # headers=headers,
                    headers=headers)
 
 if r.status_code != 200:
     print("Unable to receive deposit metadata (Status code: %s)." % (r.status_code))
     exit
 
-print("Metadata of the deposit downloaded.")
+print("Metadata of the deposit '%s' downloaded." % (r.json()["title"]))
 
 bucket_url = r.json()["links"]["bucket"]
 
@@ -44,10 +40,8 @@ for file in tqdm.tqdm(opt.files):
     path = file
     filename = os.path.basename(path)
 
-    # The target URL is a combination of the bucket link with the desired filename
-    # seperated by a slash.
     with open(path, "rb") as fp:
-        r = requests.put("%s/%s" % (bucket_url, filename),
+        requests.put("%s/%s" % (bucket_url, filename),
             params=params,
             data=fp,
         )
